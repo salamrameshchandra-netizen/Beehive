@@ -1,5 +1,5 @@
 import React from 'react';
-import { Target, BookOpen, Crosshair, BarChart3, RotateCcw, Download } from 'lucide-react';
+import { Target, BookOpen, Crosshair, BarChart3, RotateCcw, Download, Users } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: 'board' | 'guide' | 'practice' | 'analytics';
@@ -7,6 +7,9 @@ interface HeaderProps {
   ballCount: number;
   onReset: () => void;
   onExport: () => void;
+  onOpenPlayers: () => void;
+  selectedPlayerFilter?: string | null;
+  activeBowler?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -15,6 +18,9 @@ export const Header: React.FC<HeaderProps> = ({
   ballCount,
   onReset,
   onExport,
+  onOpenPlayers,
+  selectedPlayerFilter,
+  activeBowler,
 }) => {
   return (
     <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-30 px-4 lg:px-8 py-3.5">
@@ -97,6 +103,29 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
+          {/* Players Roster & Filter Button */}
+          <button
+            onClick={onOpenPlayers}
+            title="Manage players, bowlers, and rosters"
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border transition-all ${
+              selectedPlayerFilter
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-xs'
+                : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-700 hover:border-slate-600'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Players</span>
+            {selectedPlayerFilter ? (
+              <span className="text-[10px] font-mono bg-emerald-500/30 text-emerald-200 px-1.5 py-0.2 rounded-full">
+                {selectedPlayerFilter.split(' ')[0]}
+              </span>
+            ) : activeBowler ? (
+              <span className="hidden sm:inline text-[10px] text-slate-400 font-normal">
+                ({activeBowler.split(' ')[0]})
+              </span>
+            ) : null}
+          </button>
+
           {ballCount > 0 && (
             <>
               <button

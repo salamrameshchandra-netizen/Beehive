@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Header } from './components/Header';
 import { BeehiveCanvas } from './components/BeehiveCanvas';
 import { SidePanel } from './components/SidePanel';
@@ -12,9 +12,10 @@ import { PracticeMarkingMode } from './components/PracticeMarkingMode';
 import { AnalyticsPanel } from './components/AnalyticsPanel';
 import { BallLoggerModal } from './components/BallLoggerModal';
 import { ResetConfirmModal } from './components/ResetConfirmModal';
+import { PlayersModal } from './components/PlayersModal';
 import { BallDelivery, BatterStance, ViewPerspective } from './types/cricket';
 import { PRESET_SPELLS, PresetSpell } from './data/presets';
-import { Sparkles, Layers, Info, Check, Trash2 } from 'lucide-react';
+import { Sparkles, Layers, Info, Check, Trash2, Users } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'board' | 'guide' | 'practice' | 'analytics'>('board');
@@ -24,6 +25,12 @@ export default function App() {
   const [batterStance, setBatterStance] = useState<BatterStance>('RHB');
   const [perspective, setPerspective] = useState<ViewPerspective>('bowler');
   const [selectedBall, setSelectedBall] = useState<BallDelivery | null>(null);
+
+  // Player roster and filtering state
+  const [isPlayersModalOpen, setIsPlayersModalOpen] = useState<boolean>(false);
+  const [activeBowler, setActiveBowler] = useState<string>('James Anderson');
+  const [activeBatter, setActiveBatter] = useState<string>('Shubman Gill');
+  const [selectedPlayerFilter, setSelectedPlayerFilter] = useState<string | null>(null);
 
   // Ball Logger Modal state
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -40,6 +47,17 @@ export default function App() {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 2500);
   };
+
+  // Filter deliveries if a player filter is active
+  const displayedDeliveries = useMemo(() => {
+    if (!selectedPlayerFilter) return deliveries;
+    const filterLower = selectedPlayerFilter.toLowerCase();
+    return deliveries.filter(
+      (d) =>
+        d.bowlerName.toLowerCase() === filterLower ||
+        d.batterName.toLowerCase() === filterLower
+    );
+  }, [deliveries, selectedPlayerFilter]);
 
   // Canvas click handler
   const handleCanvasClick = (xCm: number, yCm: number) => {
@@ -86,6 +104,7 @@ export default function App() {
     setDeliveries([]);
     setSelectedBall(null);
     setActivePresetId(null);
+    setSelectedPlayerFilter(null);
     showToast('Beehive canvas cleared');
     setIsResetConfirmOpen(false);
   };
@@ -125,6 +144,9 @@ export default function App() {
     setDeliveries(preset.deliveries);
     setBatterStance(preset.batterStance);
     setActivePresetId(preset.id);
+    setActiveBowler(preset.bowler);
+    setActiveBatter(preset.batter);
+    setSelectedPlayerFilter(null);
     setSelectedBall(null);
     setActiveTab('board');
     showToast(`Loaded "${preset.name}"`);
@@ -150,13 +172,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
-      {/* App Header */}
+      {/* App Header with Players Button */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         ballCount={deliveries.length}
         onReset={handleResetClick}
         onExport={handleExport}
+        onOpenPlayers={() => setIsPlayersModalOpen(true)}
+        selectedPlayerFilter={selectedPlayerFilter}
+        activeBowler={activeBowler}
       />
 
       {/* Main Content Area */}
@@ -200,7 +225,7 @@ export default function App() {
               {/* Left/Center: Interactive Beehive Canvas (8 cols) */}
               <div className="lg:col-span-8 flex flex-col">
                 <BeehiveCanvas
-                  deliveries={deliveries}
+                  deliveries={displayedDeliveries}
                   batterStance={batterStance}
                   setBatterStance={setBatterStance}
                   perspective={perspective}
@@ -208,6 +233,9 @@ export default function App() {
                   onCanvasClick={handleCanvasClick}
                   selectedBallId={selectedBall?.id || null}
                   onSelectBall={setSelectedBall}
+                  onOpenPlayers={() => setIsPlayersModalOpen(true)}
+                  selectedPlayerFilter={selectedPlayerFilter}
+                  onClearPlayerFilter={() => setSelectedPlayerFilter(null)}
                 />
               </div>
 
@@ -223,10 +251,15 @@ export default function App() {
                   onRestorePresets={handleRestorePresets}
                   presets={presets}
                   activePresetId={activePresetId}
-                  deliveries={deliveries}
+                  deliveries={displayedDeliveries}
                   batterStance={batterStance}
                   onSelectBall={setSelectedBall}
                   onOpenGuide={() => setActiveTab('guide')}
+                  onOpenPlayers={() => setIsPlayersModalOpen(true)}
+                  onSelectPlayerFilter={(name) => {
+                    setSelectedPlayerFilter(name);
+                    if (name) showToast(`Filtered board to ${name}`);
+                  }}
                 />
               </div>
             </div>
@@ -246,7 +279,7 @@ export default function App() {
 
         {activeTab === 'analytics' && (
           <AnalyticsPanel
-            deliveries={deliveries}
+            deliveries={displayedDeliveries}
             batterStance={batterStance}
             onSelectBall={setSelectedBall}
             selectedBallId={selectedBall?.id || null}
@@ -267,8 +300,8 @@ export default function App() {
         initialCoords={modalCoords}
         existingBall={editingBall}
         batterStance={batterStance}
-        defaultBowler={deliveries[deliveries.length - 1]?.bowlerName || 'James Anderson'}
-        defaultBatter={deliveries[deliveries.length - 1]?.batterName || 'Batter 1'}
+        defaultBowler={activeBowler}
+        defaultBatter={activeBatter}
         currentOver={nextOverNum}
         currentBall={nextBallNum}
       />
@@ -279,6 +312,35 @@ export default function App() {
         onClose={() => setIsResetConfirmOpen(false)}
         onConfirm={handleConfirmReset}
         ballCount={deliveries.length}
+      />
+
+      {/* Players Roster & Filter Modal */}
+      <PlayersModal
+        isOpen={isPlayersModalOpen}
+        onClose={() => setIsPlayersModalOpen(false)}
+        deliveries={deliveries}
+        activeBowler={activeBowler}
+        activeBatter={activeBatter}
+        onSelectActiveBowler={(name) => {
+          setActiveBowler(name);
+          showToast(`Active bowler set to ${name}`);
+        }}
+        onSelectActiveBatter={(name) => {
+          setActiveBatter(name);
+          showToast(`Active batter set to ${name}`);
+        }}
+        selectedPlayerFilter={selectedPlayerFilter}
+        onSelectPlayerFilter={(name) => {
+          setSelectedPlayerFilter(name);
+          if (name) {
+            showToast(`Filtering Beehive to ${name}`);
+          } else {
+            showToast('Showing all players');
+          }
+        }}
+        onAddNewPlayer={(name, role) => {
+          showToast(`Added ${role}: ${name}`);
+        }}
       />
 
       {/* Toast Notification */}

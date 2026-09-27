@@ -3,7 +3,7 @@ import { BallDelivery, BatterStance } from '../types/cricket';
 import { PRESET_SPELLS, PresetSpell } from '../data/presets';
 import { PitchMapSync } from './PitchMapSync';
 import { classifyBallZone, getOutcomeColor } from '../utils/cricketMath';
-import { Sparkles, Edit3, Trash2, Crosshair, ArrowRight, Info, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Edit3, Trash2, Crosshair, ArrowRight, Info, CheckCircle2, Users, Filter } from 'lucide-react';
 
 interface SidePanelProps {
   selectedBall: BallDelivery | null;
@@ -19,6 +19,8 @@ interface SidePanelProps {
   batterStance: BatterStance;
   onSelectBall: (ball: BallDelivery | null) => void;
   onOpenGuide: () => void;
+  onOpenPlayers?: () => void;
+  onSelectPlayerFilter?: (name: string | null) => void;
 }
 
 export const SidePanel: React.FC<SidePanelProps> = ({
@@ -35,6 +37,8 @@ export const SidePanel: React.FC<SidePanelProps> = ({
   batterStance,
   onSelectBall,
   onOpenGuide,
+  onOpenPlayers,
+  onSelectPlayerFilter,
 }) => {
   return (
     <div className="space-y-4">
@@ -83,13 +87,35 @@ export const SidePanel: React.FC<SidePanelProps> = ({
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2 bg-slate-950/60 rounded border border-slate-800/80">
-                    <span className="text-slate-400 text-[10px] block">Bowler</span>
-                    <span className="font-medium text-white">{selectedBall.bowlerName}</span>
+                  <div className="p-2 bg-slate-950/60 rounded border border-slate-800/80 flex items-center justify-between">
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">Bowler</span>
+                      <span className="font-medium text-white">{selectedBall.bowlerName}</span>
+                    </div>
+                    {onSelectPlayerFilter && (
+                      <button
+                        onClick={() => onSelectPlayerFilter(selectedBall.bowlerName)}
+                        title={`Filter Beehive board to ${selectedBall.bowlerName}`}
+                        className="p-1 rounded bg-slate-800/80 hover:bg-emerald-600 hover:text-white text-slate-400 transition-colors"
+                      >
+                        <Filter className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
-                  <div className="p-2 bg-slate-950/60 rounded border border-slate-800/80">
-                    <span className="text-slate-400 text-[10px] block">Batter</span>
-                    <span className="font-medium text-white">{selectedBall.batterName}</span>
+                  <div className="p-2 bg-slate-950/60 rounded border border-slate-800/80 flex items-center justify-between">
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">Batter</span>
+                      <span className="font-medium text-white">{selectedBall.batterName}</span>
+                    </div>
+                    {onSelectPlayerFilter && (
+                      <button
+                        onClick={() => onSelectPlayerFilter(selectedBall.batterName)}
+                        title={`Filter Beehive board to ${selectedBall.batterName}`}
+                        className="p-1 rounded bg-slate-800/80 hover:bg-sky-600 hover:text-white text-slate-400 transition-colors"
+                      >
+                        <Filter className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                   <div className="p-2 bg-slate-950/60 rounded border border-slate-800/80">
                     <span className="text-slate-400 text-[10px] block">Delivery Type</span>
@@ -141,6 +167,16 @@ export const SidePanel: React.FC<SidePanelProps> = ({
               <span>Iconic Beehive Spells</span>
             </h4>
             <div className="flex items-center gap-2">
+              {onOpenPlayers && (
+                <button
+                  onClick={onOpenPlayers}
+                  className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded hover:bg-emerald-500/20 font-medium transition-colors"
+                  title="Open player roster and stats"
+                >
+                  <Users className="w-3 h-3" />
+                  <span>Players</span>
+                </button>
+              )}
               <span className="text-[10px] text-slate-400">Presets ({presets.length})</span>
               {presets.length < PRESET_SPELLS.length && (
                 <button
@@ -208,6 +244,16 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             <span>Learn How to Mark a Beehive</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
+
+          {onOpenPlayers && (
+            <button
+              onClick={onOpenPlayers}
+              className="w-full flex items-center justify-center gap-1.5 p-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+            >
+              <Users className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Manage Players &amp; Roster</span>
+            </button>
+          )}
         </div>
       )}
 

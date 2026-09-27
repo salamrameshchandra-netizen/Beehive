@@ -23,6 +23,9 @@ interface BeehiveCanvasProps {
   onCanvasClick: (xCm: number, yCm: number) => void;
   selectedBallId: string | null;
   onSelectBall: (ball: BallDelivery | null) => void;
+  onOpenPlayers?: () => void;
+  selectedPlayerFilter?: string | null;
+  onClearPlayerFilter?: () => void;
 }
 
 export const BeehiveCanvas: React.FC<BeehiveCanvasProps> = ({
@@ -34,6 +37,9 @@ export const BeehiveCanvas: React.FC<BeehiveCanvasProps> = ({
   onCanvasClick,
   selectedBallId,
   onSelectBall,
+  onOpenPlayers,
+  selectedPlayerFilter,
+  onClearPlayerFilter,
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -269,8 +275,46 @@ export const BeehiveCanvas: React.FC<BeehiveCanvasProps> = ({
             <Flame className="w-3 h-3" />
             <span>Heatmap</span>
           </button>
+
+          {onOpenPlayers && (
+            <button
+              onClick={onOpenPlayers}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold transition-colors ${
+                selectedPlayerFilter
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-xs'
+                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
+              }`}
+              title="Filter by player or select active bowler/batter"
+            >
+              <Users className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Players</span>
+              {selectedPlayerFilter && (
+                <span className="font-mono text-[9px] bg-emerald-500/30 text-emerald-200 px-1.5 py-0.2 rounded-full">
+                  {selectedPlayerFilter.split(' ')[0]}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Player Filter Active Banner */}
+      {selectedPlayerFilter && (
+        <div className="px-4 py-1.5 bg-emerald-950/40 border-b border-emerald-500/30 flex items-center justify-between text-xs text-emerald-300">
+          <div className="flex items-center gap-1.5">
+            <Users className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Filtering deliveries for: <strong className="text-white">{selectedPlayerFilter}</strong></span>
+          </div>
+          {onClearPlayerFilter && (
+            <button
+              onClick={onClearPlayerFilter}
+              className="text-[11px] underline hover:text-white font-medium"
+            >
+              Clear Filter (Show All)
+            </button>
+          )}
+        </div>
+      )}
 
       {/* SVG Canvas Area */}
       <div className="relative flex-1 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 select-none overflow-hidden min-h-[480px]">
