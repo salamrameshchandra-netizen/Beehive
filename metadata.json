@@ -1,0 +1,6 @@
+{
+  "name": "Cricket Beehive Analyzer & Marking Studio",
+  "description": "Interactive cricket beehive marking tool, visual guide, and coordinate analytics studio for coaches, analysts, and scorers.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
